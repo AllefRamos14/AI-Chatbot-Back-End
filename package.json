@@ -1,4 +1,21 @@
 {
-  "name": "Chatbot-back-end",
-  "packageManager": "yarn@4.6.0"
+  "name": "chatbot-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "openai": "^6.37.0"
+  },
+  "devDependencies": {
+    "nodemon": "latest"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
