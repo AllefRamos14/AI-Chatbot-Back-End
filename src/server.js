@@ -61,16 +61,34 @@ const PORT = process.env.PORT || 3001;
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["http://localhost:5173", "http://localhost:5174"];
+  : [
+      "http://localhost:5173",
+      "http://localhost:5174",
+    ];
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // requisições como Postman/curl
+      if (!origin) {
         return callback(null, true);
       }
-      return callback(new Error("Origem não permitida pelo CORS"));
+
+      // localhost
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // previews da Vercel
+      if (origin.includes("vercel.app")) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error(`CORS bloqueado: ${origin}`)
+      );
     },
+
     credentials: true,
   })
 );
