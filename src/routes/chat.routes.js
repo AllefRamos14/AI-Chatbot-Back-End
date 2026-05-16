@@ -3,18 +3,25 @@ import OpenAI from "openai";
 
 const router = express.Router();
 
-const apiKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
-const baseURL = process.env.OPENAI_BASE_URL || process.env.OPENROUTER_BASE_URL;
-const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+const baseURL =
+  process.env.OPENROUTER_BASE_URL ||
+  process.env.OPENAI_BASE_URL ||
+  "https://openrouter.ai/api/v1";
+
+const model =
+  process.env.OPENROUTER_MODEL ||
+  process.env.OPENAI_MODEL ||
+  "meta-llama/llama-3.1-8b-instruct:free";
 
 const openai = apiKey
   ? new OpenAI({
       apiKey,
       baseURL,
-      defaultHeaders: baseURL?.includes("openrouter.ai")
+      defaultHeaders: baseURL.includes("openrouter.ai")
         ? {
             "HTTP-Referer": process.env.APP_URL || "http://localhost:3001",
-            "X-Title": process.env.APP_NAME || "Chatbot Backend",
+            "X-Title": process.env.APP_NAME || "AI Chatbot Backend",
           }
         : undefined,
     })
@@ -40,12 +47,11 @@ router.post("/", async (req, res) => {
   try {
     if (!openai) {
       return res.status(500).json({
-        error:
-          "Configure OPENAI_API_KEY ou OPENROUTER_API_KEY no arquivo .env.",
+        error: "Configure OPENROUTER_API_KEY no arquivo .env.",
       });
     }
 
-    const { messages,image } = req.body;
+    const { messages, image } = req.body;
 
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({
@@ -54,71 +60,69 @@ router.post("/", async (req, res) => {
     }
 
     const formattedMessages = messages.map((message, index) => {
-  const isLastMessage = index === messages.length - 1;
+      const isLastMessage = index === messages.length - 1;
 
-  if (isLastMessage && image) {
-    return {
-      role: message.role,
-      content: [
+      if (isLastMessage && image) {
+        return {
+          role: message.role,
+          content: [
+            {
+              type: "text",
+              text: message.content || "Analise esta imagem.",
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: image,
+              },
+            },
+          ],
+        };
+      }
+
+      return {
+        role: message.role,
+        content: message.content,
+      };
+    });
+
+    const stream = await openai.chat.completions.create({
+      model,
+      messages: [
         {
-          type: "text",
-          text: message.content || "Analise esta imagem.",
+          role: "system",
+          content: SYSTEM_PROMPT,
         },
-        {
-          type: "image_url",
-          image_url: {
-            url: image,
-          },
-        },
+        ...formattedMessages,
       ],
-    };
-  }
+      temperature: 0.7,
+      max_tokens: 1000,
+      stream: true,
+    });
 
-  return {
-    role: message.role,
-    content: message.content,
-  };
-});
-const stream = await openai.chat.completions.create({
-  model,
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Transfer-Encoding", "chunked");
+    res.setHeader("Cache-Control", "no-cache");
 
-  messages: [
-    {
-      role: "system",
-      content: SYSTEM_PROMPT,
-    },
+    for await (const chunk of stream) {
+      const content = chunk.choices?.[0]?.delta?.content || "";
 
-    ...formattedMessages,
-  ],
+      if (content) {
+        res.write(content);
+      }
+    }
 
-  temperature: 0.7,
-  max_tokens: 1000,
-  stream: true,
-});
-
-res.setHeader("Content-Type", "text/plain; charset=utf-8");
-res.setHeader("Transfer-Encoding", "chunked");
-res.setHeader("Cache-Control", "no-cache");
-
-for await (const chunk of stream) {
-  const content = chunk.choices?.[0]?.delta?.content || "";
-
-  if (content) {
-    res.write(content);
-  }
-}
-
-res.end();
-
-
+    return res.end();
   } catch (error) {
     console.error("Erro no chat:", error);
 
-    return res.status(500).json({
-      error:
-        error?.message ||
-        "Erro ao gerar resposta.",
-    });
+    if (!res.headersSent) {
+      return res.status(500).json({
+        error: error?.message || "Erro ao gerar resposta.",
+      });
+    }
+
+    return res.end();
   }
 });
 
