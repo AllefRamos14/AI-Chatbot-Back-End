@@ -7,7 +7,7 @@ const apiKey = process.env.OPENROUTER_API_KEY;
 
 const baseURL =
   process.env.OPENROUTER_BASE_URL ||
-  "https://openrouter.ai/api/v1";
+  "openrouter/free";
 
 const model =
   process.env.OPENROUTER_MODEL ||
@@ -121,8 +121,9 @@ router.post("/", async (req, res) => {
 
     if (!res.headersSent) {
       return res.status(500).json({
-        error: error?.message || "Erro ao gerar resposta.",
-      });
+        error:
+      "Modelo temporariamente indisponível. Tente novamente em alguns segundos.",
+  });
     }
 
     return res.end();
