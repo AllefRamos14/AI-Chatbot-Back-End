@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
-    "cors": "latest",
+    "cors": "^2.8.6",
     "dotenv": "latest",
     "express": "latest",
     "openai": "^6.37.0"

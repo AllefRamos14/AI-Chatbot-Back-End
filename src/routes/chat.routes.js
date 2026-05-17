@@ -3,7 +3,14 @@ import OpenAI from "openai";
 
 const router = express.Router();
 
-const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+// const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+const apiKey = process.env.OPENROUTER_API_KEY;
+
+console.log("API KEY EXISTE?", !!apiKey);
+console.log("MODEL:", model);
+console.log("BASE URL:", baseURL);
+
+
 const baseURL =
   process.env.OPENROUTER_BASE_URL ||
   process.env.OPENAI_BASE_URL ||
