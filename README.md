@@ -17,12 +17,6 @@ API REST do chatbot inteligente construída com Node.js + Express e integrada ao
 <br/>
 <br/>
 
-```txt
-⚙️ AI Chatbot Backend
-API responsável por processar mensagens,
-integrar com IA e retornar respostas em tempo real.
-```
-
 </div>
 
 ---
